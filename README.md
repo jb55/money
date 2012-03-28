@@ -1,16 +1,20 @@
-```haskell
-module Data.Money () where
-```
-
-```haskell
-import Data.Default
-```
-
 Data.Money
 ==========
 
 ```haskell
-data Money a = Money !Double a
+module Data.Money ( Currency(..)
+                  , leftSign
+                  , rightSign
+                  ) where
+```
+
+```haskell
+import Data.Default
+import Data.Decimal
+```
+
+```haskell
+data Money a = Money !Decimal a
 ```
 
 The money type allows you to perform calculations and currency
@@ -41,12 +45,12 @@ eurC = EUR 1.3339
 Helper function for dealing with Canadian/Euros
 
 ```haskell
-eur :: Double -> Money EUR
+eur :: Decimal -> Money EUR
 eur = money eurC
 ```
 
 ```haskell
-cad :: Double -> Money CAD
+cad :: Decimal -> Money CAD
 cad = money cadC
 ```
 
@@ -110,19 +114,19 @@ instance (Currency a, HasSign a, Show a) => Num (Money a) where
 ```
 
 ```haskell
-instance (Currency a, HasSign a, Show a) => Fractional (Money a) where
-  (/)  = liftMoney (/)
-  recip m = money (cur m) $ recip (raw m)
-  fromRational i = error "nope"
+--instance (Currency a, HasSign a, Show a) => Fractional (Money a) where
+--  (/)  = liftMoney (/)
+--  recip m = money (cur m) $ recip (raw m)
+--  fromRational i = error "nope"
 ```
 
 ```haskell
 instance (HasSign a, Show a) => Show (Money a) where
   show m = let s = sign (cur m)
-               c = dbl m
+               c = roundTo 2 $ raw m
                c' = ' ':(show $ cur m)
                negWrap s
-                 | raw m < 0 = "(" ++ s ++ ")"
+                 | c < 0 = "(" ++ s ++ ")"
                  | otherwise = s
            in case signPos s of
              ToLeft  -> negWrap $ signSymbol s ++ show c ++ c'
@@ -148,12 +152,12 @@ instance Currency EUR where
 
 ```haskell
 instance Default Sign where
-  def = toLeft "$"
+  def = leftSign "$"
 ```
 
 ```haskell
 instance HasSign EUR where
-  sign _ = toLeft "€"
+  sign _ = leftSign "€"
 ```
 
 ```haskell
@@ -169,7 +173,7 @@ instance HasSign USD where
 Data
 ----
 
-A simple currency sign definition, use `toLeft` and `toRight` to
+A simple currency sign definition, use `leftSign` and `rightSign` to
 construct these.
 
 ```haskell
@@ -211,44 +215,52 @@ data EUR = EUR ExchangeRate
          deriving (Show, Eq)
 ```
 
-Constructors
-------------
-
-```haskell
-toRight :: String -> Sign
-toRight = flip Sign ToLeft
-```
-
-```haskell
-toLeft :: String -> Sign
-toLeft = flip Sign ToLeft
-```
+Misc
+----
 
 ```haskell
 type ExchangeRate = Double
+type Dollars = Int
+type Cents = Int
 ```
 
 ```haskell
-money :: Currency a => a -> Double -> Money a
-money = flip Money
+mn :: RealFrac f => f -> Decimal
+mn = precision
 ```
 
 ```haskell
-round' n places = round (n / fromIntegral factor) * factor
-  where factor = 10 ^ (places - 1)
+precision :: RealFrac f => f -> Decimal
+precision = realFracToDecimal 6
 ```
 
 ```haskell
-dbl :: Money a -> Double
-dbl m
-  | c == 0    = 0.0
-  | otherwise = (fromIntegral (round $ c * 100)) / 100
-  where
-    c = raw m
+rightSign :: String -> Sign
+rightSign = flip Sign ToLeft
 ```
 
 ```haskell
-usd :: Double -> Money USD
+leftSign :: String -> Sign
+leftSign = flip Sign ToLeft
+```
+
+```haskell
+money :: (Currency a) => a -> Decimal -> Money a
+money c v = Money v c
+```
+
+```haskell
+round' :: Decimal -> Decimal
+round' c = c
+```
+
+```haskell
+roundMoney :: Money a -> Decimal
+roundMoney m = round' $ raw m
+```
+
+```haskell
+usd :: Decimal -> Money USD
 usd = money USD
 ```
 
@@ -258,7 +270,7 @@ cur (Money _ c) = c
 ```
 
 ```haskell
-raw :: Money a -> Double
+raw :: Money a -> Decimal
 raw (Money i _) = i
 ```
 
@@ -270,7 +282,7 @@ raw (Money i _) = i
 ```
 
 ```haskell
-liftMoney :: (Currency a) => (Double -> Double -> Double) -> Money a -> Money a -> Money a
+liftMoney :: (Currency a) => (Decimal -> Decimal -> Decimal) -> Money a -> Money a -> Money a
 liftMoney f a b = money (cur a) (raw a `f` raw b)
 ```
 
@@ -278,12 +290,12 @@ liftMoney f a b = money (cur a) (raw a `f` raw b)
 toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 toRate a b m = let c    = raw m
                    rate = xrate a
-               in money b $ c * rate
+               in money b $ c *. rate
 ```
 
 ```haskell
 fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 fromRate a b m = let c    = raw m
                      rate = recip $ xrate b
-                 in money b $ c * rate
+                 in money b $ c *. rate
 ```
