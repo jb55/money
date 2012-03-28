@@ -1,15 +1,15 @@
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 module Data.Money () where
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 import Data.Default
 ~~~~
 
 Data.Money
 ==========
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 data Money a = Money !Double a
 ~~~~
 
@@ -28,38 +28,38 @@ Define the Canadian/Euro currency with USD exchange rate
 Specifying the exchange rate this way allows us to change the exchange
 rate on the fly if needed
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 cadC :: CAD
 cadC = CAD 1.00361
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 eurC :: EUR
 eurC = EUR 1.3339
 ~~~~
 
 Helper function for dealing with Canadian/Euros
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 eur :: Double -> Money EUR
 eur = money eurC
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 cad :: Double -> Money CAD
 cad = money cadC
 ~~~~
 
 Convert 2000 CAD to EUR
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 ex1 :: Money EUR
 ex1 = cad 2000 `to` eurC
 ~~~~
 
 Convert any money type to USD
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 ex2 :: Money USD
 ex2 = toUSD ex1
 ~~~~
@@ -67,12 +67,12 @@ ex2 = toUSD ex1
 Instances
 ---------
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance Eq (Money a) where
   m1 == m2 = raw m1 == raw m2
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance (Currency a, HasSign a, Show a) => Num (Money a) where
   (+) = liftMoney (+)
   (*) = liftMoney (*)
@@ -83,14 +83,14 @@ instance (Currency a, HasSign a, Show a) => Num (Money a) where
   fromInteger i = undefined
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance (Currency a, HasSign a, Show a) => Fractional (Money a) where
   (/)  = liftMoney (/)
   recip m = money (cur m) $ recip (raw m)
   fromRational i = error "nope"
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance (HasSign a, Show a) => Show (Money a) where
   show m = let s = sign (cur m)
                c = dbl m
@@ -103,39 +103,39 @@ instance (HasSign a, Show a) => Show (Money a) where
              ToRight -> negWrap $ show c ++ signSymbol s ++ c'
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance Currency USD where
   xrate _ = 1
   toUSD  m = m
   fromUSD _ m = m
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance Currency CAD where
   xrate (CAD x) = x
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance Currency EUR where
   xrate (EUR x) = x
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance Default Sign where
   def = toLeft "$"
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance HasSign EUR where
   sign _ = toLeft "€"
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance HasSign CAD where
   sign _ = def
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 instance HasSign USD where
   sign _ = def
 ~~~~
@@ -146,7 +146,7 @@ Data
 A simple currency sign definition, use `toLeft` and `toRight` to
 construct these.
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 data Sign = Sign {
     signSymbol :: String
   , signPos    :: Position
@@ -155,7 +155,7 @@ data Sign = Sign {
 
 Position used for positioning currency signs when printing
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 data Position = ToLeft | ToRight
               deriving (Show)
 ~~~~
@@ -166,21 +166,21 @@ Currencies
 Since the Currency typeclass uses the US dollar a reference point, we
 don't need to define USD to have an `ExchangeRate` in its constructor
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 data USD = USD
          deriving (Show, Eq)
 ~~~~
 
 Canadian Dollar
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 data CAD = CAD ExchangeRate
          deriving (Show, Eq)
 ~~~~
 
 Euro
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 data EUR = EUR ExchangeRate
          deriving (Show, Eq)
 ~~~~
@@ -188,31 +188,31 @@ data EUR = EUR ExchangeRate
 Constructors
 ------------
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 toRight :: String -> Sign
 toRight = flip Sign ToLeft
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 toLeft :: String -> Sign
 toLeft = flip Sign ToLeft
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 type ExchangeRate = Double
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 money :: Currency a => a -> Double -> Money a
 money = flip Money
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 round' n places = round (n / fromIntegral factor) * factor
   where factor = 10 ^ (places - 1)
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 dbl :: Money a -> Double
 dbl m
   | c == 0    = 0.0
@@ -221,39 +221,39 @@ dbl m
     c = raw m
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 usd :: Double -> Money USD
 usd = money USD
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 cur :: Money a -> a
 cur (Money _ c) = c
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 raw :: Money a -> Double
 raw (Money i _) = i
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 --  liftMoneyX :: (Currency a, Currency b, Num n) => (n -> n -> n) -> Money a -> Money b -> Money a
 --  liftMoneyX f a b = let ca = raw $ toUSD a
 --                         cb = raw $ toUSD b
 --                     in fromUSD $ usdc $ round (fromIntegral ca `f` fromIntegral cb)
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 liftMoney :: (Currency a) => (Double -> Double -> Double) -> Money a -> Money a -> Money a
 liftMoney f a b = money (cur a) (raw a `f` raw b)
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 class HasSign a where
   sign :: a -> Sign
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 class Currency a where
   xrate   :: a -> ExchangeRate
   toUSD   :: Money a -> Money USD
@@ -261,20 +261,20 @@ class Currency a where
   to    :: Currency b => Money a -> b -> Money b
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
   a `to` b = fromUSD b $ toUSD a
   toUSD m = toRate (cur m) USD m
   fromUSD = fromRate USD
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 toRate a b m = let c    = raw m
                    rate = xrate a
                in money b $ c * rate
 ~~~~
 
-~~~~ {.sourceCode .literate .haskell}
+~~~~ {.haskell}
 fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 fromRate a b m = let c    = raw m
                      rate = recip $ xrate b
