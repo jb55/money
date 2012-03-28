@@ -1,12 +1,16 @@
 
-> module Data.Money () where
-
-> import Data.Default
-
 Data.Money
 ==========
 
-> data Money a = Money !Double a
+> module Data.Money ( Currency(..)
+>                   , leftSign
+>                   , rightSign
+>                   ) where
+
+> import Data.Default
+> import Data.Decimal
+
+> data Money a = Money !Decimal a
 
 The money type allows you to perform calculations and currency conversions in a
 type-safe way. The currency is a part of the type signature, so adding USD and
@@ -31,10 +35,10 @@ the fly if needed
 
 Helper function for dealing with Canadian/Euros
 
-> eur :: Double -> Money EUR
+> eur :: Decimal -> Money EUR
 > eur = money eurC
 
-> cad :: Double -> Money CAD
+> cad :: Decimal -> Money CAD
 > cad = money cadC
 
 Convert 2000 CAD to EUR
@@ -83,17 +87,17 @@ Instances
 >   signum m = money (cur m) . signum . raw $ m
 >   fromInteger i = undefined
 
-> instance (Currency a, HasSign a, Show a) => Fractional (Money a) where
->   (/)  = liftMoney (/)
->   recip m = money (cur m) $ recip (raw m)
->   fromRational i = error "nope"
+> --instance (Currency a, HasSign a, Show a) => Fractional (Money a) where
+> --  (/)  = liftMoney (/)
+> --  recip m = money (cur m) $ recip (raw m)
+> --  fromRational i = error "nope"
 
 > instance (HasSign a, Show a) => Show (Money a) where
 >   show m = let s = sign (cur m)
->                c = dbl m
+>                c = roundTo 2 $ raw m
 >                c' = ' ':(show $ cur m)
 >                negWrap s
->                  | raw m < 0 = "(" ++ s ++ ")"
+>                  | c < 0 = "(" ++ s ++ ")"
 >                  | otherwise = s
 >            in case signPos s of
 >              ToLeft  -> negWrap $ signSymbol s ++ show c ++ c'
@@ -111,10 +115,10 @@ Instances
 >   xrate (EUR x) = x
 
 > instance Default Sign where
->   def = toLeft "$"
+>   def = leftSign "$"
 
 > instance HasSign EUR where
->   sign _ = toLeft "€"
+>   sign _ = leftSign "€"
 
 > instance HasSign CAD where
 >   sign _ = def
@@ -125,7 +129,7 @@ Instances
 Data
 ----
 
-A simple currency sign definition, use `toLeft` and `toRight` to construct
+A simple currency sign definition, use `leftSign` and `rightSign` to construct
 these.
 
 > data Sign = Sign {
@@ -158,37 +162,41 @@ Euro
 >          deriving (Show, Eq)
 
 
-Constructors
-------------
-
-> toRight :: String -> Sign
-> toRight = flip Sign ToLeft
-
-> toLeft :: String -> Sign
-> toLeft = flip Sign ToLeft
+Misc
+----
 
 > type ExchangeRate = Double
+> type Dollars = Int
+> type Cents = Int
 
-> money :: Currency a => a -> Double -> Money a
-> money = flip Money
+> mn :: RealFrac f => f -> Decimal
+> mn = precision
 
-> round' n places = round (n / fromIntegral factor) * factor
->   where factor = 10 ^ (places - 1)
+> precision :: RealFrac f => f -> Decimal
+> precision = realFracToDecimal 6
 
-> dbl :: Money a -> Double
-> dbl m
->   | c == 0    = 0.0
->   | otherwise = (fromIntegral (round $ c * 100)) / 100
->   where
->     c = raw m
+> rightSign :: String -> Sign
+> rightSign = flip Sign ToLeft
 
-> usd :: Double -> Money USD
+> leftSign :: String -> Sign
+> leftSign = flip Sign ToLeft
+
+> money :: (Currency a) => a -> Decimal -> Money a
+> money c v = Money v c
+
+> round' :: Decimal -> Decimal
+> round' c = c
+
+> roundMoney :: Money a -> Decimal
+> roundMoney m = round' $ raw m
+
+> usd :: Decimal -> Money USD
 > usd = money USD
 
 > cur :: Money a -> a
 > cur (Money _ c) = c
 
-> raw :: Money a -> Double
+> raw :: Money a -> Decimal
 > raw (Money i _) = i
 
 > --  liftMoneyX :: (Currency a, Currency b, Num n) => (n -> n -> n) -> Money a -> Money b -> Money a
@@ -196,15 +204,15 @@ Constructors
 > --                         cb = raw $ toUSD b
 > --                     in fromUSD $ usdc $ round (fromIntegral ca `f` fromIntegral cb)
 
-> liftMoney :: (Currency a) => (Double -> Double -> Double) -> Money a -> Money a -> Money a
+> liftMoney :: (Currency a) => (Decimal -> Decimal -> Decimal) -> Money a -> Money a -> Money a
 > liftMoney f a b = money (cur a) (raw a `f` raw b)
 
 > toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 > toRate a b m = let c    = raw m
 >                    rate = xrate a
->                in money b $ c * rate
+>                in money b $ c *. rate
 
 > fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 > fromRate a b m = let c    = raw m
 >                      rate = recip $ xrate b
->                  in money b $ c * rate
+>                  in money b $ c *. rate
