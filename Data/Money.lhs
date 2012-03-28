@@ -9,6 +9,7 @@ Data.Money
 
 > import Data.Default
 > import Data.Decimal
+> import GHC.Word (Word8)
 
 > data Money a = Money !Decimal a
 
@@ -28,10 +29,10 @@ Specifying the exchange rate this way allows us to change the exchange rate on
 the fly if needed
 
 > cadC :: CAD
-> cadC = CAD 1.00361
+> cadC = CAD 1.0017
 
 > eurC :: EUR
-> eurC = EUR 1.3339
+> eurC = EUR 1.3289
 
 Helper function for dealing with Canadian/Euros
 
@@ -44,7 +45,7 @@ Helper function for dealing with Canadian/Euros
 Convert 2000 CAD to EUR
 
 > ex1 :: Money EUR
-> ex1 = cad 2000 `to` eurC
+> ex1 = cad (fm 2000) `to` eurC
 
 Convert any money type to USD
 
@@ -169,11 +170,11 @@ Misc
 > type Dollars = Int
 > type Cents = Int
 
-> mn :: RealFrac f => f -> Decimal
-> mn = precision
+> precision :: Word8
+> precision = 6
 
-> precision :: RealFrac f => f -> Decimal
-> precision = realFracToDecimal 6
+> fm :: RealFrac f => f -> Decimal
+> fm = realFracToDecimal precision
 
 > rightSign :: String -> Sign
 > rightSign = flip Sign ToLeft
@@ -181,8 +182,16 @@ Misc
 > leftSign :: String -> Sign
 > leftSign = flip Sign ToLeft
 
+> makePrecise :: Decimal -> Decimal
+> makePrecise d
+>   | dp < precision = Decimal precision $ dm * (10^(precision - dp))
+>   | otherwise      = d 
+>   where
+>     dp = decimalPlaces d
+>     dm = decimalMantissa d
+
 > money :: (Currency a) => a -> Decimal -> Money a
-> money c v = Money v c
+> money c d = Money (makePrecise d) c
 
 > round' :: Decimal -> Decimal
 > round' c = c

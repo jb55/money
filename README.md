@@ -11,6 +11,7 @@ module Data.Money ( Currency(..)
 ```haskell
 import Data.Default
 import Data.Decimal
+import GHC.Word (Word8)
 ```
 
 ```haskell
@@ -34,12 +35,12 @@ rate on the fly if needed
 
 ```haskell
 cadC :: CAD
-cadC = CAD 1.00361
+cadC = CAD 1.0017
 ```
 
 ```haskell
 eurC :: EUR
-eurC = EUR 1.3339
+eurC = EUR 1.3289
 ```
 
 Helper function for dealing with Canadian/Euros
@@ -58,7 +59,7 @@ Convert 2000 CAD to EUR
 
 ```haskell
 ex1 :: Money EUR
-ex1 = cad 2000 `to` eurC
+ex1 = cad (fm 2000) `to` eurC
 ```
 
 Convert any money type to USD
@@ -225,13 +226,13 @@ type Cents = Int
 ```
 
 ```haskell
-mn :: RealFrac f => f -> Decimal
-mn = precision
+precision :: Word8
+precision = 6
 ```
 
 ```haskell
-precision :: RealFrac f => f -> Decimal
-precision = realFracToDecimal 6
+fm :: RealFrac f => f -> Decimal
+fm = realFracToDecimal precision
 ```
 
 ```haskell
@@ -245,8 +246,18 @@ leftSign = flip Sign ToLeft
 ```
 
 ```haskell
+makePrecise :: Decimal -> Decimal
+makePrecise d
+  | dp < precision = Decimal precision $ dm * (10^(precision - dp))
+  | otherwise      = d 
+  where
+    dp = decimalPlaces d
+    dm = decimalMantissa d
+```
+
+```haskell
 money :: (Currency a) => a -> Decimal -> Money a
-money c v = Money v c
+money c d = Money (makePrecise d) c
 ```
 
 ```haskell
