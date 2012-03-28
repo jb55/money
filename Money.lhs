@@ -15,6 +15,36 @@ CAD would result in a type error.
 Since `Currency` is a typeclass, you can define your own currency types with
 custom exchange rates and it will work just fine.
 
+Examples
+--------
+
+Define the Canadian/Euro currency with USD exchange rate
+
+Specifying the exchange rate this way allows us to change the exchange rate on
+the fly if needed
+
+> cadC :: CAD
+> cadC = CAD 1.00361
+
+> eurC :: EUR
+> eurC = EUR 1.3339
+
+Helper function for dealing with Canadian/Euros
+
+> eur :: Double -> Money EUR
+> eur = money eurC
+
+> cad :: Double -> Money CAD
+> cad = money cadC
+
+Convert 2000 CAD to EUR
+
+> ex1 :: Money EUR
+> ex1 = cad 2000 `conv` eurC
+
+> ex2 :: Money USD
+> ex2 = toUSD ex1
+
 Instances
 ---------
 
@@ -168,9 +198,3 @@ Constructors
 > fromRate a b m = let c    = raw m
 >                      rate = recip $ xrate b
 >                  in money b $ c * rate
-
-> eur' :: ExchangeRate -> Double -> Money EUR
-> eur' x = money (EUR x)
-
-> cad' :: ExchangeRate -> Double -> Money CAD
-> cad' x = money (CAD x)

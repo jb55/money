@@ -20,6 +20,48 @@ signature, so adding USD and CAD would result in a type error.
 Since `Currency` is a typeclass, you can define your own currency types
 with custom exchange rates and it will work just fine.
 
+Examples
+--------
+
+Define the Canadian/Euro currency with USD exchange rate
+
+Specifying the exchange rate this way allows us to change the exchange
+rate on the fly if needed
+
+~~~~ {.sourceCode .literate .haskell}
+cadC :: CAD
+cadC = CAD 1.00361
+~~~~
+
+~~~~ {.sourceCode .literate .haskell}
+eurC :: EUR
+eurC = EUR 1.3339
+~~~~
+
+Helper function for dealing with Canadian/Euros
+
+~~~~ {.sourceCode .literate .haskell}
+eur :: Double -> Money EUR
+eur = money eurC
+~~~~
+
+~~~~ {.sourceCode .literate .haskell}
+cad :: Double -> Money CAD
+cad = money cadC
+~~~~
+
+Convert 2000 CAD to EUR
+
+~~~~ {.sourceCode .literate .haskell}
+ex1 :: Money EUR
+ex1 = cad 2000 `conv` eurC
+~~~~
+
+~~~~ {.sourceCode .literate .haskell}
+ex2 :: Money USD
+ex2 = toUSD ex1
+~~~~
+
 Instances
 ---------
 
@@ -235,14 +277,4 @@ fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 fromRate a b m = let c    = raw m
                      rate = recip $ xrate b
                  in money b $ c * rate
-~~~~
-
-~~~~ {.sourceCode .literate .haskell}
-eur' :: ExchangeRate -> Double -> Money EUR
-eur' x = money (EUR x)
-~~~~
-
-~~~~ {.sourceCode .literate .haskell}
-cad' :: ExchangeRate -> Double -> Money CAD
-cad' x = money (CAD x)
 ~~~~
