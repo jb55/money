@@ -1,7 +1,10 @@
 
+> module Data.Money () where
+
 > import Data.Default
 
-# Data.Money
+Data.Money
+==========
 
 > data Money a = Money !Double a
 
@@ -12,7 +15,8 @@ CAD would result in a type error.
 Since `Currency` is a typeclass, you can define your own currency types with
 custom exchange rates and it will work just fine.
 
-## Instances
+Instances
+---------
 
 > instance Eq (Money a) where
 >   m1 == m2 = raw m1 == raw m2
@@ -65,7 +69,8 @@ custom exchange rates and it will work just fine.
 > instance HasSign USD where
 >   sign _ = def
 
-## Data
+Data
+----
 
 A simple currency sign definition, use `toLeft` and `toRight` to construct
 these.
@@ -80,7 +85,8 @@ Position used for positioning currency signs when printing
 > data Position = ToLeft | ToRight
 >               deriving (Show)
 
-### Currencies
+Currencies
+----------
 
 Since the Currency typeclass uses the US dollar a reference point, we don't need
 to define USD to have an `ExchangeRate` in its constructor
@@ -99,7 +105,8 @@ Euro
 >          deriving (Show, Eq)
 
 
-## Constructors
+Constructors
+------------
 
 > toRight :: String -> Sign
 > toRight = flip Sign ToLeft

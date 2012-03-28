@@ -1,4 +1,8 @@
 ~~~~ {.sourceCode .literate .haskell}
+module Data.Money () where
+~~~~
+
+~~~~ {.sourceCode .literate .haskell}
 import Data.Default
 ~~~~
 
@@ -112,7 +116,8 @@ data Position = ToLeft | ToRight
               deriving (Show)
 ~~~~
 
-### Currencies
+Currencies
+----------
 
 Since the Currency typeclass uses the US dollar a reference point, we
 don't need to define USD to have an `ExchangeRate` in its constructor
