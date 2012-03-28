@@ -47,6 +47,27 @@ Convert any money type to USD
 > ex2 :: Money USD
 > ex2 = toUSD ex1
 
+Classes
+-------
+
+Minimal complete definition: only `xrate` needs to be defined
+
+> class Currency a where
+>   xrate   :: a -> ExchangeRate
+>   toUSD   :: Money a -> Money USD
+>   fromUSD :: a -> Money USD -> Money a
+>   to    :: Currency b => Money a -> b -> Money b
+
+>   a `to` b = fromUSD b $ toUSD a
+>   toUSD m = toRate (cur m) USD m
+>   fromUSD = fromRate USD
+
+Currencies with an HasSign instance can be `Show`n
+
+> class HasSign a where
+>   sign :: a -> Sign
+
+
 Instances
 ---------
 
@@ -177,19 +198,6 @@ Constructors
 
 > liftMoney :: (Currency a) => (Double -> Double -> Double) -> Money a -> Money a -> Money a
 > liftMoney f a b = money (cur a) (raw a `f` raw b)
-
-> class HasSign a where
->   sign :: a -> Sign
-
-> class Currency a where
->   xrate   :: a -> ExchangeRate
->   toUSD   :: Money a -> Money USD
->   fromUSD :: a -> Money USD -> Money a
->   to    :: Currency b => Money a -> b -> Money b
-
->   a `to` b = fromUSD b $ toUSD a
->   toUSD m = toRate (cur m) USD m
->   fromUSD = fromRate USD
 
 > toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 > toRate a b m = let c    = raw m

@@ -64,6 +64,32 @@ ex2 :: Money USD
 ex2 = toUSD ex1
 ```
 
+Classes
+-------
+
+Minimal complete definition: only `xrate` needs to be defined
+
+```haskell
+class Currency a where
+  xrate   :: a -> ExchangeRate
+  toUSD   :: Money a -> Money USD
+  fromUSD :: a -> Money USD -> Money a
+  to    :: Currency b => Money a -> b -> Money b
+```
+
+```haskell
+  a `to` b = fromUSD b $ toUSD a
+  toUSD m = toRate (cur m) USD m
+  fromUSD = fromRate USD
+```
+
+Currencies with an HasSign instance can be `Show`n
+
+```haskell
+class HasSign a where
+  sign :: a -> Sign
+```
+
 Instances
 ---------
 
@@ -246,25 +272,6 @@ raw (Money i _) = i
 ```haskell
 liftMoney :: (Currency a) => (Double -> Double -> Double) -> Money a -> Money a -> Money a
 liftMoney f a b = money (cur a) (raw a `f` raw b)
-```
-
-```haskell
-class HasSign a where
-  sign :: a -> Sign
-```
-
-```haskell
-class Currency a where
-  xrate   :: a -> ExchangeRate
-  toUSD   :: Money a -> Money USD
-  fromUSD :: a -> Money USD -> Money a
-  to    :: Currency b => Money a -> b -> Money b
-```
-
-```haskell
-  a `to` b = fromUSD b $ toUSD a
-  toUSD m = toRate (cur m) USD m
-  fromUSD = fromRate USD
 ```
 
 ```haskell
