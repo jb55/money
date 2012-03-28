@@ -45,7 +45,7 @@ Helper function for dealing with Canadian/Euros
 Convert 2000 CAD to EUR
 
 > ex1 :: Money EUR
-> ex1 = cad (fm 2000) `to` eurC
+> ex1 = cad 2000 `to` eurC
 
 Convert any money type to USD
 

@@ -59,7 +59,7 @@ Convert 2000 CAD to EUR
 
 ```haskell
 ex1 :: Money EUR
-ex1 = cad (fm 2000) `to` eurC
+ex1 = cad 2000 `to` eurC
 ```
 
 Convert any money type to USD
