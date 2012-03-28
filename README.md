@@ -54,8 +54,10 @@ Convert 2000 CAD to EUR
 
 ~~~~ {.sourceCode .literate .haskell}
 ex1 :: Money EUR
-ex1 = cad 2000 `conv` eurC
+ex1 = cad 2000 `to` eurC
 ~~~~
+
+Convert any money type to USD
 
 ~~~~ {.sourceCode .literate .haskell}
 ex2 :: Money USD
@@ -256,11 +258,11 @@ class Currency a where
   xrate   :: a -> ExchangeRate
   toUSD   :: Money a -> Money USD
   fromUSD :: a -> Money USD -> Money a
-  conv    :: Currency b => Money a -> b -> Money b
+  to    :: Currency b => Money a -> b -> Money b
 ~~~~
 
 ~~~~ {.sourceCode .literate .haskell}
-  a `conv` b = fromUSD b $ toUSD a
+  a `to` b = fromUSD b $ toUSD a
   toUSD m = toRate (cur m) USD m
   fromUSD = fromRate USD
 ~~~~

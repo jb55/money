@@ -40,7 +40,9 @@ Helper function for dealing with Canadian/Euros
 Convert 2000 CAD to EUR
 
 > ex1 :: Money EUR
-> ex1 = cad 2000 `conv` eurC
+> ex1 = cad 2000 `to` eurC
+
+Convert any money type to USD
 
 > ex2 :: Money USD
 > ex2 = toUSD ex1
@@ -183,9 +185,9 @@ Constructors
 >   xrate   :: a -> ExchangeRate
 >   toUSD   :: Money a -> Money USD
 >   fromUSD :: a -> Money USD -> Money a
->   conv    :: Currency b => Money a -> b -> Money b
+>   to    :: Currency b => Money a -> b -> Money b
 
->   a `conv` b = fromUSD b $ toUSD a
+>   a `to` b = fromUSD b $ toUSD a
 >   toUSD m = toRate (cur m) USD m
 >   fromUSD = fromRate USD
 
