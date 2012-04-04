@@ -168,7 +168,7 @@ to define USD to have an `ExchangeRate` in its constructor
 Canadian Dollar
 
 > data CAD = CAD ExchangeRate
->          deriving (Show, Eq, HasSign)
+>          deriving (Show, Eq)
 
 Euro
 
