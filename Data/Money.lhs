@@ -8,12 +8,12 @@ Data.Money
 >                   , HasSign(..)
 >                   , Sign(..)
 >                   , Position(..)
->                   , leftSign
->                   , rightSign
+>                   , leftSign, rightSign
 >                   , currency
 >                   , money
->                   , USD, CAD, EUR
->                   , usd
+>                   , fm
+>                   , USD, CAD, EUR, GenericC
+>                   , usd, rateOf
 >                   ) where
 
 > import Data.Default
@@ -196,6 +196,9 @@ Misc
 > precision :: Word8
 > precision = 6
 
+> rateOf :: Double -> GenericC
+> rateOf = GenericC
+
 > fm :: RealFrac f => f -> Decimal
 > fm = realFracToDecimal precision
 
@@ -239,12 +242,12 @@ Misc
 > liftMoney :: (Currency a) => (Decimal -> Decimal -> Decimal) -> Money a -> Money a -> Money a
 > liftMoney f a b = money (currency a) (raw a `f` raw b)
 
-> fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
-> fromRate a b m = let c    = raw m
->                      rate = xrate a
->                  in money b $ c *. rate
-
 > toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 > toRate a b m = let c    = raw m
->                    rate = recip $ xrate b
+>                    rate = recip $ xrate a
 >                in money b $ c *. rate
+
+> fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
+> fromRate a b m = let c    = raw m
+>                      rate = xrate b
+>                  in money b $ c *. rate

@@ -8,12 +8,12 @@ module Data.Money ( Currency(..)
                   , HasSign(..)
                   , Sign(..)
                   , Position(..)
-                  , leftSign
-                  , rightSign
+                  , leftSign, rightSign
                   , currency
                   , money
-                  , USD, CAD, EUR
-                  , usd
+                  , fm
+                  , USD, CAD, EUR, GenericC
+                  , usd, rateOf
                   ) where
 ```
 
@@ -260,6 +260,11 @@ precision = 6
 ```
 
 ```haskell
+rateOf :: Double -> GenericC
+rateOf = GenericC
+```
+
+```haskell
 fm :: RealFrac f => f -> Decimal
 fm = realFracToDecimal precision
 ```
@@ -327,15 +332,15 @@ liftMoney f a b = money (currency a) (raw a `f` raw b)
 ```
 
 ```haskell
-fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
-fromRate a b m = let c    = raw m
-                     rate = xrate a
-                 in money b $ c *. rate
+toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
+toRate a b m = let c    = raw m
+                   rate = recip $ xrate a
+               in money b $ c *. rate
 ```
 
 ```haskell
-toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
-toRate a b m = let c    = raw m
-                   rate = recip $ xrate b
-               in money b $ c *. rate
+fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
+fromRate a b m = let c    = raw m
+                     rate = xrate b
+                 in money b $ c *. rate
 ```
