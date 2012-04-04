@@ -3,8 +3,17 @@ Data.Money
 ==========
 
 > module Data.Money ( Currency(..)
+>                   , Money
+>                   , ExchangeRate
+>                   , HasSign(..)
+>                   , Sign(..)
+>                   , Position(..)
 >                   , leftSign
 >                   , rightSign
+>                   , currency
+>                   , money
+>                   , USD
+>                   , usd
 >                   ) where
 
 > import Data.Default
@@ -29,10 +38,10 @@ Specifying the exchange rate this way allows us to change the exchange rate on
 the fly if needed
 
 > cadC :: CAD
-> cadC = CAD 1.0017
+> cadC = CAD 0.997197874
 
 > eurC :: EUR
-> eurC = EUR 1.3289
+> eurC = EUR 0.75001875
 
 Helper function for dealing with Canadian/Euros
 
@@ -64,13 +73,14 @@ Minimal complete definition: only `xrate` needs to be defined
 >   to    :: Currency b => Money a -> b -> Money b
 
 >   a `to` b = fromUSD b $ toUSD a
->   toUSD m = toRate (cur m) USD m
+>   toUSD m = toRate (currency m) USD m
 >   fromUSD = fromRate USD
 
 Currencies with an HasSign instance can be `Show`n
 
 > class HasSign a where
 >   sign :: a -> Sign
+>   sign = leftSign "$"
 
 
 Instances
@@ -83,26 +93,29 @@ Instances
 >   (+) = liftMoney (+)
 >   (*) = liftMoney (*)
 >   (-) = liftMoney (-)
->   negate m = money (cur m) . negate . raw $ m
->   abs m    = money (cur m) . abs . raw $ m
->   signum m = money (cur m) . signum . raw $ m
->   fromInteger i = undefined
+>   negate m = money (currency m) . negate . raw $ m
+>   abs m    = money (currency m) . abs . raw $ m
+>   signum m = money (currency m) . signum . raw $ m
+>   fromInteger = undefined 
 
 > --instance (Currency a, HasSign a, Show a) => Fractional (Money a) where
 > --  (/)  = liftMoney (/)
-> --  recip m = money (cur m) $ recip (raw m)
+> --  recip m = money (currency m) $ recip (raw m)
 > --  fromRational i = error "nope"
 
-> instance (HasSign a, Show a) => Show (Money a) where
->   show m = let s = sign (cur m)
+> instance (HasSign a, Show a, Currency a) => Show (Money a) where
+>   show m = let s = sign (currency m)
 >                c = roundTo 2 $ raw m
->                c' = ' ':(show $ cur m)
+>                c' = ' ':(show $ currency m)
+>                showc c'
+>                  | c' < 0    = show $ negate c'
+>                  | otherwise = show c'
 >                negWrap s
->                  | c < 0 = "(" ++ s ++ ")"
+>                  | c < 0     = "(" ++ s ++ ")"
 >                  | otherwise = s
 >            in case signPos s of
->              ToLeft  -> negWrap $ signSymbol s ++ show c ++ c'
->              ToRight -> negWrap $ show c ++ signSymbol s ++ c'
+>              ToLeft  -> negWrap $ signSymbol s ++ showc c ++ c'
+>              ToRight -> negWrap $ showc c ++ signSymbol s ++ c'
 
 > instance Currency USD where
 >   xrate _ = 1
@@ -155,7 +168,7 @@ to define USD to have an `ExchangeRate` in its constructor
 Canadian Dollar
 
 > data CAD = CAD ExchangeRate
->          deriving (Show, Eq)
+>          deriving (Show, Eq, HasSign)
 
 Euro
 
@@ -202,8 +215,8 @@ Misc
 > usd :: Decimal -> Money USD
 > usd = money USD
 
-> cur :: Money a -> a
-> cur (Money _ c) = c
+> currency :: Currency a => Money a -> a
+> currency (Money _ c) = c
 
 > raw :: Money a -> Decimal
 > raw (Money i _) = i
@@ -214,14 +227,14 @@ Misc
 > --                     in fromUSD $ usdc $ round (fromIntegral ca `f` fromIntegral cb)
 
 > liftMoney :: (Currency a) => (Decimal -> Decimal -> Decimal) -> Money a -> Money a -> Money a
-> liftMoney f a b = money (cur a) (raw a `f` raw b)
-
-> toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
-> toRate a b m = let c    = raw m
->                    rate = xrate a
->                in money b $ c *. rate
+> liftMoney f a b = money (currency a) (raw a `f` raw b)
 
 > fromRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
 > fromRate a b m = let c    = raw m
->                      rate = recip $ xrate b
+>                      rate = xrate a
 >                  in money b $ c *. rate
+
+> toRate :: (Currency a, Currency b) => a -> b -> Money a -> Money b
+> toRate a b m = let c    = raw m
+>                    rate = recip $ xrate b
+>                in money b $ c *. rate
