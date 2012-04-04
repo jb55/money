@@ -78,6 +78,13 @@ ex2 :: Money USD
 ex2 = toUSD ex1
 ```
 
+Convert any money type to some generic currency
+
+```haskell
+ex3 :: Money GenericC
+ex3 = cad 5000 `to` rateOf 0.2
+```
+
 Classes
 -------
 
