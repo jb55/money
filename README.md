@@ -12,7 +12,7 @@ module Data.Money ( Currency(..)
                   , rightSign
                   , currency
                   , money
-                  , USD
+                  , USD, CAD, EUR
                   , usd
                   ) where
 ```
@@ -102,7 +102,7 @@ Currencies with an HasSign instance can be `Show`n
 ```haskell
 class HasSign a where
   sign :: a -> Sign
-  sign = leftSign "$"
+  sign _ = leftSign "$"
 ```
 
 Instances
@@ -170,6 +170,15 @@ instance Default Sign where
 ```
 
 ```haskell
+instance HasSign GenericC where
+```
+
+```haskell
+instance Currency GenericC where
+  xrate (GenericC x) = x
+```
+
+```haskell
 instance HasSign EUR where
   sign _ = leftSign "€"
 ```
@@ -219,7 +228,14 @@ Canadian Dollar
 
 ```haskell
 data CAD = CAD ExchangeRate
-         deriving (Show, Eq, HasSign)
+         deriving (Show, Eq)
+```
+
+GenericC
+
+```haskell
+data GenericC = GenericC ExchangeRate
+              deriving (Show, Eq)
 ```
 
 Euro

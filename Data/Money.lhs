@@ -12,7 +12,7 @@ Data.Money
 >                   , rightSign
 >                   , currency
 >                   , money
->                   , USD
+>                   , USD, CAD, EUR
 >                   , usd
 >                   ) where
 
@@ -80,7 +80,7 @@ Currencies with an HasSign instance can be `Show`n
 
 > class HasSign a where
 >   sign :: a -> Sign
->   sign = leftSign "$"
+>   sign _ = leftSign "$"
 
 
 Instances
@@ -131,6 +131,11 @@ Instances
 > instance Default Sign where
 >   def = leftSign "$"
 
+> instance HasSign GenericC where
+
+> instance Currency GenericC where
+>   xrate (GenericC x) = x
+
 > instance HasSign EUR where
 >   sign _ = leftSign "€"
 
@@ -169,6 +174,11 @@ Canadian Dollar
 
 > data CAD = CAD ExchangeRate
 >          deriving (Show, Eq)
+
+GenericC
+
+> data GenericC = GenericC ExchangeRate
+>               deriving (Show, Eq)
 
 Euro
 
