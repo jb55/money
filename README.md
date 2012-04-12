@@ -4,6 +4,7 @@ Data.Money
 ```haskell
 module Data.Money ( Currency(..)
                   , Money
+                  , makePrecise
                   , ExchangeRate
                   , HasSign(..)
                   , Sign(..)
@@ -12,7 +13,8 @@ module Data.Money ( Currency(..)
                   , currency
                   , money
                   , fm
-                  , USD, CAD, EUR, GenericC
+                  , raw
+                  , USD(..), CAD(..), EUR(..), GenericC(..)
                   , usd, rateOf
                   ) where
 ```
@@ -96,6 +98,7 @@ class Currency a where
   toUSD   :: Money a -> Money USD
   fromUSD :: a -> Money USD -> Money a
   to    :: Currency b => Money a -> b -> Money b
+  mkCur :: ExchangeRate -> a
 ```
 
 ```haskell
@@ -116,6 +119,11 @@ Instances
 ---------
 
 ```haskell
+instance Ord (Money a) where
+  m1 `compare` m2 = raw m1 `compare` raw m2
+```
+
+```haskell
 instance Eq (Money a) where
   m1 == m2 = raw m1 == raw m2
 ```
@@ -128,7 +136,7 @@ instance (Currency a, HasSign a, Show a) => Num (Money a) where
   negate m = money (currency m) . negate . raw $ m
   abs m    = money (currency m) . abs . raw $ m
   signum m = money (currency m) . signum . raw $ m
-  fromInteger = undefined 
+  fromInteger = money (mkCur 1) . fromIntegral
 ```
 
 ```haskell
@@ -155,34 +163,38 @@ instance (HasSign a, Show a, Currency a) => Show (Money a) where
 ```
 
 ```haskell
-instance Currency USD where
-  xrate _ = 1
-  toUSD  m = m
-  fromUSD _ m = m
-```
-
-```haskell
-instance Currency CAD where
-  xrate (CAD x) = x
-```
-
-```haskell
-instance Currency EUR where
-  xrate (EUR x) = x
-```
-
-```haskell
 instance Default Sign where
   def = leftSign "$"
 ```
 
 ```haskell
-instance HasSign GenericC where
+instance Currency USD where
+  xrate _ = 1
+  toUSD  m = m
+  fromUSD _ m = m
+  mkCur xr = USD
+```
+
+```haskell
+instance Currency CAD where
+  xrate (CAD x) = x
+  mkCur xr = CAD xr
+```
+
+```haskell
+instance Currency EUR where
+  xrate (EUR x) = x
+  mkCur xr = EUR xr
 ```
 
 ```haskell
 instance Currency GenericC where
   xrate (GenericC x) = x
+  mkCur xr = GenericC xr
+```
+
+```haskell
+instance HasSign GenericC where
 ```
 
 ```haskell
@@ -263,7 +275,7 @@ type Cents = Int
 
 ```haskell
 precision :: Word8
-precision = 6
+precision = 16
 ```
 
 ```haskell

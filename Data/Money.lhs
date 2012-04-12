@@ -4,6 +4,7 @@ Data.Money
 
 > module Data.Money ( Currency(..)
 >                   , Money
+>                   , makePrecise
 >                   , ExchangeRate
 >                   , HasSign(..)
 >                   , Sign(..)
@@ -12,7 +13,8 @@ Data.Money
 >                   , currency
 >                   , money
 >                   , fm
->                   , USD, CAD, EUR, GenericC
+>                   , raw
+>                   , USD(..), CAD(..), EUR(..), GenericC(..)
 >                   , usd, rateOf
 >                   ) where
 
@@ -76,6 +78,7 @@ Minimal complete definition: only `xrate` needs to be defined
 >   toUSD   :: Money a -> Money USD
 >   fromUSD :: a -> Money USD -> Money a
 >   to    :: Currency b => Money a -> b -> Money b
+>   mkCur :: ExchangeRate -> a
 
 >   a `to` b = fromUSD b $ toUSD a
 >   toUSD m = toRate (currency m) USD m
@@ -91,6 +94,9 @@ Currencies with an HasSign instance can be `Show`n
 Instances
 ---------
 
+> instance Ord (Money a) where
+>   m1 `compare` m2 = raw m1 `compare` raw m2
+
 > instance Eq (Money a) where
 >   m1 == m2 = raw m1 == raw m2
 
@@ -101,7 +107,7 @@ Instances
 >   negate m = money (currency m) . negate . raw $ m
 >   abs m    = money (currency m) . abs . raw $ m
 >   signum m = money (currency m) . signum . raw $ m
->   fromInteger = undefined 
+>   fromInteger = money (mkCur 1) . fromIntegral
 
 > --instance (Currency a, HasSign a, Show a) => Fractional (Money a) where
 > --  (/)  = liftMoney (/)
@@ -122,24 +128,28 @@ Instances
 >              ToLeft  -> negWrap $ signSymbol s ++ showc c ++ c'
 >              ToRight -> negWrap $ showc c ++ signSymbol s ++ c'
 
+> instance Default Sign where
+>   def = leftSign "$"
+
 > instance Currency USD where
 >   xrate _ = 1
 >   toUSD  m = m
 >   fromUSD _ m = m
+>   mkCur xr = USD
 
 > instance Currency CAD where
 >   xrate (CAD x) = x
+>   mkCur xr = CAD xr
 
 > instance Currency EUR where
 >   xrate (EUR x) = x
-
-> instance Default Sign where
->   def = leftSign "$"
-
-> instance HasSign GenericC where
+>   mkCur xr = EUR xr
 
 > instance Currency GenericC where
 >   xrate (GenericC x) = x
+>   mkCur xr = GenericC xr
+
+> instance HasSign GenericC where
 
 > instance HasSign EUR where
 >   sign _ = leftSign "€"
@@ -199,7 +209,7 @@ Misc
 > type Cents = Int
 
 > precision :: Word8
-> precision = 6
+> precision = 16
 
 > rateOf :: Double -> GenericC
 > rateOf = GenericC
