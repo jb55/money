@@ -1,1 +1,0 @@
-find Data -name '*.hs' -type f | sed '/^\.\/dist.*/d'
