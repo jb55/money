@@ -2,24 +2,46 @@
 
 module Money
     ( Money(..)
+    , showMoney
     ) where
 
 import Data.Char (isDigit, ord)
 import Data.Ratio
-import Text.Printf (printf)
+import Data.List (findIndex)
 
-newtype Money = Money Rational deriving (Num, Ord, Eq)
+newtype Money = Money { getMoney :: Rational }
+  deriving (Num, Ord, Eq, Fractional)
 
 instance Show Money where
-  show (Money r) = reverse
-                 . dropWhile (\c -> c =='0' || c == '.')
-                 . reverse
-                 . (printf "%.10f" :: Double -> String)
-                 . fromRational
-                 $ r
+  show money = showMoney Nothing money
 
 instance Read Money where
   readsPrec _ str = [ (Money (readRational str), "") ]
+
+-- https://stackoverflow.com/a/30979717/10486
+showMoney :: Maybe Int -> Money -> String
+showMoney (Just n) (Money r) =
+    let d = round (abs r * 10^n)
+        s = show (d :: Integer)
+        s' = replicate (n - length s + 1) '0' ++ s
+        (h, f) = splitAt (length s' - n) s'
+    in  (if r < 0 then "-" else "") ++ h ++ "." ++ f
+-- The length of the repeating digits is related to the totient function of the
+-- denominator. This means that the complexity of computing them is at least as
+-- bad as factoring, i.e., it quickly becomes infeasible.
+showMoney Nothing (Money r) =
+  let (i, f) = properFraction (abs r) :: (Integer, Rational)
+      si = if r < 0 then "-" ++ show i else show i
+      decimals f = loop f [] ""
+      loop x fs ds =
+        if x == 0 then ds
+        else
+          case findIndex (x ==) fs of
+            Just i  -> let (l, r) = splitAt i ds in l ++ "(" ++ r ++ ")"
+            Nothing -> let (c, f) = properFraction (10 * x) :: (Integer, Rational)
+                       in loop f (fs ++ [x]) (ds ++ show c)
+  in if f == 0 then si else si ++ "." ++ decimals f
+
 
 -- from GHC Utils
 readRational__ :: ReadS Rational -- NB: doesn't handle leading "-"
